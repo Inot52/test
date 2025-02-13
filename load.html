@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'CustomFont', sans-serif;
+            background-color: black;
+            color: white;
+            text-align: center;
+        }
+
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('Montserrat-Bold.ttf') format('truetype');
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .image-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Затемнение */
+        }
+
+        .active {
+            opacity: 1;
+        }
+
+        #main-text {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+            z-index: 3;
+        }
+
+        #sub-text {
+            font-size: 1.5em;
+            z-index: 3;
+        }
+
+        #loading-text {
+            font-size: 1.2em;
+            z-index: 3;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #loading-text.active {
+            opacity: 1;
+        }
+
+        #mode-map-text {
+            font-size: 0.9em;
+            z-index: 3;
+            margin-top: 5px;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #mode-map-text.active {
+            opacity: 1;
+        }
+
+        #hint-text {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            font-size: 1.2em;
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #hint-text.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<audio id="background-music" loop>
+    <source src="music.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает тег аудио.
+</audio>
+
+<div id="overlay">
+    <div id="main-text">MetaHub:NewEra | Русский HL2RP</div>
+    <div id="sub-text">Добро пожаловать на наш проект!</div>
+    <div id="loading-text"></div> <!-- Текст загрузки -->
+    <div id="mode-map-text"></div> <!-- Режим и карта -->
+
+    <div class="image-container active">
+        <img src="desktop-wallpaper-half-life-2-18-half-life-2.jpg" alt="Image 1">
+    </div>
+    <div class="image-container">
+        <img src="half-life-2-combine-citadel-city-17-wallpaper-preview.jpg" alt="Image 2">
+    </div>
+    <div class="image-container">
+        <img src="half-life-combine-metrocop-half-life-2-wallpaper-thumb.jpg" alt="Image 3">
+    </div>
+
+    <div id="hint-text"></div>
+</div>
+
+<script>
+    const overlay = document.getElementById('overlay');
+    const images = document.querySelectorAll('.image-container');
+    const hintText = document.getElementById('hint-text');
+    const loadingText = document.getElementById('loading-text');
+    const modeMapText = document.getElementById('mode-map-text');
+    let currentImage = 0;
+
+    const hints = [
+        "Подсказка: Что бы начать играть, надо покакать",
+        "Подсказка: Саныч, иди пожалуйста куда подальше хз",
+        "Подсказка: Гидра нагло своровала сборку SUP без разрешения."
+    ];
+
+    const loadingMessages = [
+        "Загрузка карты...",
+        "Загрузка моделей...",
+        "Загрузка текстур...",
+        "Загрузка игровых данных...",
+        "Подключение к серверу..."
+    ];
+
+    let loadingStep = 0;
+
+    // Данные о режиме и карте (можно заменить на динамические)
+    const gameMode = "sandbox"; // По умолчанию
+    const gameMap = "gm_construct"; // По умолчанию
+
+    // Функция для обновления текста загрузки
+    function updateLoadingText() {
+        loadingText.textContent = loadingMessages[loadingStep];
+        loadingText.classList.add('active');
+        loadingStep = (loadingStep + 1) % loadingMessages.length;
+    }
+
+    // Функция для обновления текста режима и карты
+    function updateModeMapText() {
+        modeMapText.textContent = `Вы играете в режиме '${gameMode}' на карте '${gameMap}'`;
+        modeMapText.classList.add('active');
+    }
+
+    // Показываем подсказки и текст загрузки сразу
+    hintText.textContent = hints[0];
+    hintText.classList.add('active');
+    updateLoadingText();
+    updateModeMapText();
+
+    // Запускаем обновление текста загрузки каждые 3 секунды
+    setInterval(updateLoadingText, 15000);
+
+    // Устанавливаем интервал для смены изображений и подсказок
+    setInterval(() => {
+        images[currentImage].classList.remove('active');
+        hintText.classList.remove('active');
+
+        currentImage = (currentImage + 1) % images.length;
+        hintText.textContent = hints[currentImage % hints.length];
+
+        images[currentImage].classList.add('active');
+        hintText.classList.add('active');
+    }, 10000); // Поменять изображение и текст каждые 10 секунд
+
+    // Воспроизведение музыки через 5 секунд
+    setTimeout(() => {
+        const music = document.getElementById('background-music');
+        music.play();
+    }, 5000);
+</script>
+
+</body>
+</html>
